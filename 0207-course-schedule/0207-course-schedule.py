@@ -1,47 +1,45 @@
 class Solution:
     def canFinish(self, numCourses: int, prerequisites: list[list[int]]) -> bool:
-        # creating hashmap for storing crs -> pre,, setting as [] first
-        preMap = {i: [] for i in range(numCourses)}
+        # using Kahn's Algo: BFS Topological Sort
 
-        # making pairs [crs,pre] and adding it to preMap
+        # initializing indegree array and setting it to zero
+        indegree = [0] * numCourses
+
+        # creating adjacency list
+        adj = [[] for i in range(numCourses)]
+
+        # counting indegrees & adding all crs -> pre in adj
         for crs, pre in prerequisites:
-            preMap[crs].append(pre)
+            indegree[pre] += 1
+            adj[crs].append(pre)
+            
+        # initializing empty queue for BFS
+        q = deque()
 
-        # initializing empty visit set 
-        visitSet = set()
-        
-        # creating a recursive dfs(crs)
-        def dfs(crs):
-            # checking the base cases
-
-            # first: if pre left in visit set, return False
-            if crs in visitSet:
-                # cycle detected
-                return False
-
-            # second: if no pre left return True
-            if preMap[crs] == []:
-                return True
-
-            # if not any case, then add it to visitSet
-            visitSet.add(crs)
-
-            # now looping recursively in preMap using dfs
-            for pre in preMap[crs]:
-                # if crs cannot be completed, return False
-                if not dfs(pre):
-                    return False
-                
-            # if it can be completed, remove from visit set
-            visitSet.remove(crs)
-            # then mark preMap[crs] = [] , as empty list as it can be completed
-            preMap[crs] = []
-            # then only, return True
-            return True
-
-        # finally looping over crs in all the numCourses
+        # appending crs with no pre in queue; i.e ones with indegee as zero
         for crs in range(numCourses):
-            # again checking list, if any pre left, return False, else return True
-            if not dfs(crs):
-                return False
-        return True
+            # append crs if no pre, i.e indegree as zero
+            if indegree[crs] == 0:
+                q.append(crs)
+
+        # initializing finished course count as zero
+        finish = 0
+
+        # while loop for BFS
+        while q:
+            # getting nodes form queue
+            node = q.popleft()
+            
+            # one node processed so increasing finish
+            finish += 1
+
+            # looping over adj list of nodes; adj[node]; nei == crs
+            for nei in adj[node]:
+                # removing edge from indegree
+                indegree[nei] -= 1
+                # append nei if no pre, i.e indegree as zero
+                if indegree[nei] == 0:
+                    q.append(nei)
+        
+        # this returns True if all courses can be finished, else False
+        return finish == numCourses
